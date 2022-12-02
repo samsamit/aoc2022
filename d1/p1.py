@@ -1,5 +1,15 @@
-input = open("./input.txt", "r")
-# input = open("./test.txt", "r")
+import sys
+
+
+sys.path.append('C:/Users/samu.tiainen/Documents/Personal/AdventOfCode/aoc2022')
+from utils import getLines
+
+
+# input = open("./d1/input.txt", "r")
+input = open("./d1/test.txt", "r")
+
+res = getLines(input)
+print(res)
 
 elfs = []
 elf = []

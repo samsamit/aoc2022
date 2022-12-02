@@ -10,5 +10,5 @@ open(f'{path}/input.txt', "x")
 open(f'{path}/p1.py', "x")
 open(f'{path}/p2.py', "x")
 print(f'Day {day} created!')
-cd = os.system(f'cd d{day}')
-print(cd)
+
+os.system(f'cd d{day}')
