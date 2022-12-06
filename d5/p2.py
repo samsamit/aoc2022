@@ -1,4 +1,5 @@
 input = open("input.txt", "r").read()
+
 packetSize = 14
 four = []
 fail = True
