@@ -1,88 +1,71 @@
 import json
 
 
-inputLines = open("./d7/input.txt", "r").readlines()
+inputLines = open("./d7/test.txt", "r").readlines()
+class DirNode:
+    def __init__(self, name) -> None:
+        self.name = name
+        self.childs = []
+        pass
 
-filesystem = {"/": {}}
-
-def printDict(dict):
-    print(json.dumps(dict, indent=2))
-
-def findParent(child, node):
-    for key in node:
-        if "size" in node[key].keys(): 
-            continue
-        if child in node[key].keys():
-            return key
-        res = findParent(child, node[key])
-        if res != None:
-            return res
-
-def addObjectToTree(currentDir, objectToAdd, node):
-    if currentDir in node.keys():
-        node[currentDir].update(objectToAdd)
-        return node
-    else:
-        for key in node:
-            if "size" not in node[key].keys():
-                res = addObjectToTree(currentDir, objectToAdd, node[key])
-                node[key] = res
-    return node
-
-def calculateTotals(node):
-    curTotal = 0
-    for key in node:
-        if key == "totalSize":
-            continue
-        if "size" in node[key].keys():
-            curTotal += node[key]["size"]
-            continue
+    def addChild(self, path, child):
+        print(path)
+        path.pop(0)
+        if len(path) == 0:
+            self.childs.append(child)
         else:
-            node[key].update(calculateTotals(node[key]))
-            curTotal += node[key]["totalSize"]
-    
-    node.update({"totalSize": curTotal})
-    return node
-            
+            for child in self.childs:
+                if child.__class__.__name__ == "DirNode" and child.name == path[0]:
+                    child.addChild(path.copy(), child)
 
-currentDir = ""
-for line in inputLines:
-    parts = line.strip().split(" ")
-    if parts[0] == "$":
-        if parts[1] == "cd":
-            if parts[2] == "..":
-                currentDir = findParent(currentDir, filesystem)
+    def print(self):
+        for child in self.childs:
+            if child.__class__.__name__ == "DirNode":
+                print("Dir:", child.name)
+                child.print()
             else:
-                currentDir = parts[2]
-    if parts[0] == "dir":
-        filesystem = addObjectToTree(currentDir, {parts[1]: {}}, filesystem)
-    if parts[0].isnumeric():
-        filesystem = addObjectToTree(currentDir, {parts[1]: {"size": int(parts[0])}}, filesystem)
+                print("File:", child.name, child.size)
 
-# printDict(filesystem)
-# def findDoubleDirs(node):
-#     for key in node:
-#         if key == "totalSize":
-#             continue
-#         if "size" in node[key].keys():
-#             continue
-#         else:
-#             if list(node.keys()).count(key) > 1:
-#                 print("Double:", key)
-#             findDoubleDirs(node[key])
-# findDoubleDirs(filesystem)
+class FileNode:
+    def __init__(self, size, name) -> None:
+        self.size = size
+        self.name = name
+        pass
 
-filesystem = calculateTotals(filesystem)
+class FileTree:
+    def __init__(self) -> None:
+        self.tree = DirNode("/")
+        pass
 
-def getTotalSizeOfBigDirs(node):
-    total = 0
-    for key in node:
-        if key == "totalSize" or "size" in node[key].keys():
-            continue
-        if "totalSize" in node[key]:
-            if node[key]["totalSize"] <= 100000:
-                total += node[key]["totalSize"]
-        total += getTotalSizeOfBigDirs(node[key])
-    return total
+    def addDir(self, path, dirName):
+        # print(path)
+        self.tree.addChild(path.copy(), DirNode(dirName))
+        
+    def addFile(self, path, name, size):
+        self.tree.addChild(path.copy(), FileNode(size, name))
 
-print(getTotalSizeOfBigDirs(filesystem))
+    def print(self):
+        print(self.tree.childs)
+        self.tree.print()
+
+fileTree = FileTree()
+breadcrumbs = []
+for line in inputLines:
+    command = line.strip().split()
+    if command[0] == "$":
+        match command[1]:
+            case "cd":
+                match command[2]:
+                    case "..":
+                        breadcrumbs.pop()
+                    case _:
+                        breadcrumbs.append(command[2])
+            case "ls":
+                continue
+    if command[0].isnumeric():
+        fileTree.addFile(breadcrumbs.copy(), command[1], command[0])
+    if command[0] == "dir":
+        fileTree.addDir(breadcrumbs.copy(), command[1])
+    print(breadcrumbs)
+
+fileTree.print()
